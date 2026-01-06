@@ -32,6 +32,11 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
+<<<<<<< codex/wrap-devtools-call-with-environment-check
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.webContents.openDevTools();
+  }
+=======
   mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', () => {
@@ -82,6 +87,7 @@ const registerGlobalShortcut = () => {
   globalShortcut.register('Plus', plusTriggered);
   globalShortcut.register('Numadd', plusTriggered);
   globalShortcut.register('Enter', enterTriggered);
+>>>>>>> main
 };
 
 // This method will be called when Electron has finished
