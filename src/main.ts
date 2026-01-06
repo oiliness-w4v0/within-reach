@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, globalShortcut } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 
@@ -7,9 +7,14 @@ if (started) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow | null = null;
+const comboWindowMs = 400;
+let lastPlusPressedAt = 0;
+let lastEnterPressedAt = 0;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -27,15 +32,71 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
+<<<<<<< codex/wrap-devtools-call-with-environment-check
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.webContents.openDevTools();
   }
+=======
+  mainWindow.webContents.openDevTools();
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+};
+
+const showOrCreateWindow = () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+  }
+
+  if (!mainWindow) {
+    return;
+  }
+
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+
+  mainWindow.show();
+  mainWindow.focus();
+};
+
+const triggerComboIfReady = () => {
+  if (lastPlusPressedAt === 0 || lastEnterPressedAt === 0) {
+    return;
+  }
+
+  if (Math.abs(lastPlusPressedAt - lastEnterPressedAt) <= comboWindowMs) {
+    showOrCreateWindow();
+    lastPlusPressedAt = 0;
+    lastEnterPressedAt = 0;
+  }
+};
+
+const registerGlobalShortcut = () => {
+  const plusTriggered = () => {
+    lastPlusPressedAt = Date.now();
+    triggerComboIfReady();
+  };
+
+  const enterTriggered = () => {
+    lastEnterPressedAt = Date.now();
+    triggerComboIfReady();
+  };
+
+  globalShortcut.register('Plus', plusTriggered);
+  globalShortcut.register('Numadd', plusTriggered);
+  globalShortcut.register('Enter', enterTriggered);
+>>>>>>> main
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+  registerGlobalShortcut();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -44,6 +105,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on('activate', () => {
